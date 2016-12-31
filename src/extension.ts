@@ -129,8 +129,7 @@ class ExternCrateHelper {
 
         Promise.all([
             new Promise((resolve) => {
-                let masked = source.replace(/\/\*.*?\*\//g, (s) => ' '.repeat(s.length))
-                    .replace(/\/\/.*?\n/g, (s) => ' '.repeat(s.length));
+                let masked = maskComments(source);
                 let re = /extern\s+crate\s+(\w+)(?:\s+as\s+\w+)?;/g;
                 let match: RegExpMatchArray;
                 let crates: [number, string][] = [];
@@ -185,7 +184,7 @@ class ExternCrateHelper {
                     diags.push(new ExternCrateHelperDiagnostic(
                         crate,
                         new vscode.Range(doc.positionAt(index),
-                            doc.positionAt(source.indexOf(';', index)+1))
+                            doc.positionAt(source.indexOf(';', index) + 1))
                     ));
                 }
             }
@@ -193,4 +192,9 @@ class ExternCrateHelper {
             this._diags.set(doc.uri, diags);
         });
     }
+}
+
+function maskComments(src: string): string {
+    return src.replace(/\/\*.*?\*\//g, (s) => ' '.repeat(s.length))
+        .replace(/\/\/.*?\n/g, (s) => ' '.repeat(s.length));
 }
