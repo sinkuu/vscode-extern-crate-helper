@@ -54,7 +54,7 @@ class ExternCrateHelper {
                     args.push('--dev');
                 }
 
-                cp.execFile('cargo', args, (err, stdout, stderr) => {
+                cp.execFile('cargo', args, { cwd: vscode.workspace.rootPath }, (err, stdout, stderr) => {
                     if (err && (err as any).code === 'ENOENT') {
                         vscode.window.showErrorMessage('cargo-edit is not installed.');
                     } else if (stderr.length !== 0) {
