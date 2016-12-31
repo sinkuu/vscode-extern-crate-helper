@@ -131,7 +131,7 @@ class ExternCrateHelper {
             new Promise((resolve) => {
                 let masked = source.replace(/\/\*.*?\*\//g, (s) => ' '.repeat(s.length))
                     .replace(/\/\/.*?\n/g, (s) => ' '.repeat(s.length));
-                let re = /extern\s+crate\s+(\w+)/g;
+                let re = /extern\s+crate\s+(\w+)(?:\s+as\s+\w+)?;/g;
                 let match: RegExpMatchArray;
                 let crates: [number, string][] = [];
                 while ((match = re.exec(masked)) !== null) {
