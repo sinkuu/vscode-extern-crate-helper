@@ -143,7 +143,7 @@ class ExternCrateHelper {
                 let path = vscode.workspace.rootPath + '/Cargo.toml';
                 let mtime = fs.lstatSync(path).mtime;
                 // TODO findup
-                if (this._cache === null || this._cachemtime < mtime) {
+                if (this._cache === undefined || this._cachemtime < mtime) {
                     this._cachemtime = mtime;
                     this._cache = toml.parse(fs.readFileSync(path, 'utf8'));
                 }
