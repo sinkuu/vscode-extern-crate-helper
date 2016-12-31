@@ -127,70 +127,65 @@ class ExternCrateHelper {
 
         let source = doc.getText();
 
-        Promise.all([
-            new Promise((resolve) => {
-                let masked = maskComments(source);
-                let re = /extern\s+crate\s+(\w+)(?:\s+as\s+\w+)?;/g;
-                let match: RegExpMatchArray;
-                let crates: [number, string][] = [];
-                while ((match = re.exec(masked)) !== null) {
-                    crates.push([match.index, match[1]]);
-                }
-                resolve(crates);
-            }),
-            new Promise((resolve) => {
-                let path = vscode.workspace.rootPath + '/Cargo.toml';
-                let mtime = fs.lstatSync(path).mtime;
-                // TODO findup
-                if (this._cache === undefined || this._cachemtime < mtime) {
-                    this._cachemtime = mtime;
-                    this._cache = toml.parse(fs.readFileSync(path, 'utf8'));
-                }
-                resolve(this._cache);
-            }),
-        ]).then(([externs, manifest]: [[number, string][], any]) => {
-            let rel = doc.fileName.slice(vscode.workspace.rootPath.length);
-            if (manifest.lib && manifest.lib.path && !rel.startsWith(manifest.lib.path)) {
-                console.log('lib.path found but mismatched');
+        let masked = maskComments(source);
+        let re = /extern\s+crate\s+(\w+)(?:\s+as\s+\w+)?;/g;
+        let match: RegExpMatchArray;
+        let crates: [number, string][] = [];
+        while ((match = re.exec(masked)) !== null) {
+            crates.push([match.index, match[1]]);
+        }
+
+        let path = vscode.workspace.rootPath + '/Cargo.toml';
+        let mtime = fs.lstatSync(path).mtime;
+        // TODO findup
+        if (this._cache === undefined || this._cachemtime < mtime) {
+            this._cachemtime = mtime;
+            this._cache = toml.parse(fs.readFileSync(path, 'utf8'));
+        }
+
+        let manifest = this._cache;
+
+        let rel = doc.fileName.slice(vscode.workspace.rootPath.length);
+        if (manifest.lib && manifest.lib.path && !rel.startsWith(manifest.lib.path)) {
+            console.log('lib.path found but mismatched');
+            return false;
+        }
+        if (manifest.bin) {
+            let bins = manifest.bin as any[];
+            if (!bins.some((x) => x.path && rel.startsWith(x.path))) {
+                console.log('bin[].path found but none of them matched');
                 return false;
             }
-            if (manifest.bin) {
-                let bins = manifest.bin as any[];
-                if (!bins.some((x) => x.path && rel.startsWith(x.path))) {
-                    console.log('bin[].path found but none of them matched');
-                    return false;
-                }
+        }
+
+        let deps: string[] = [];
+        if (manifest["dependencies"] !== null) {
+            for (let k in manifest["dependencies"]) {
+                deps.push(k.replace('-', '_'));
             }
-
-            let deps: string[] = [];
-            if (manifest["dependencies"] !== null) {
-                for (let k in manifest["dependencies"]) {
-                    deps.push(k.replace('-', '_'));
-                }
+        }
+        if (manifest["dev-dependencies"] !== null) {
+            for (let k in manifest["dev-dependencies"]) {
+                deps.push(k.replace('-', '_'));
             }
-            if (manifest["dev-dependencies"] !== null) {
-                for (let k in manifest["dev-dependencies"]) {
-                    deps.push(k.replace('-', '_'));
-                }
+        }
+
+        deps = deps.filter((x, index) => deps.indexOf(x) === index);
+
+        let diags: vscode.Diagnostic[] = [];
+
+        for (let [index, crate] of crates) {
+            if (deps.findIndex((x) => x === crate) === -1) {
+                console.log(crate);
+                diags.push(new ExternCrateHelperDiagnostic(
+                    crate,
+                    new vscode.Range(doc.positionAt(index),
+                        doc.positionAt(source.indexOf(';', index) + 1))
+                ));
             }
+        }
 
-            deps = deps.filter((x, index) => deps.indexOf(x) === index);
-
-            let diags: vscode.Diagnostic[] = [];
-
-            for (let [index, crate] of externs) {
-                if (deps.findIndex((x) => x === crate) === -1) {
-                    console.log(crate);
-                    diags.push(new ExternCrateHelperDiagnostic(
-                        crate,
-                        new vscode.Range(doc.positionAt(index),
-                            doc.positionAt(source.indexOf(';', index) + 1))
-                    ));
-                }
-            }
-
-            this._diags.set(doc.uri, diags);
-        });
+        this._diags.set(doc.uri, diags);
     }
 }
 
