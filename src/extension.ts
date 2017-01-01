@@ -38,8 +38,9 @@ class ExternCrateHelperCommand implements vscode.Command {
 
 class ExternCrateHelper {
     private _disposable: vscode.Disposable;
-    private _cachemtime: Date;
-    private _cache: any;
+    private _manifestmtime: Date;
+    private _manifest: any;
+    private _manifestpath: string;
     private _diags: vscode.DiagnosticCollection;
 
     constructor() {
@@ -138,12 +139,13 @@ class ExternCrateHelper {
         let path = vscode.workspace.rootPath + '/Cargo.toml';
         let mtime = fs.lstatSync(path).mtime;
         // TODO findup
-        if (this._cache === undefined || this._cachemtime < mtime) {
-            this._cachemtime = mtime;
-            this._cache = toml.parse(fs.readFileSync(path, 'utf8'));
+        if (this._manifest === undefined || this._manifestpath !== path || this._manifestmtime < mtime) {
+            this._manifestpath = path;
+            this._manifestmtime = mtime;
+            this._manifest = toml.parse(fs.readFileSync(path, 'utf8'));
         }
 
-        let manifest = this._cache;
+        let manifest = this._manifest;
 
         let rel = doc.fileName.slice(vscode.workspace.rootPath.length);
         if (manifest.lib && manifest.lib.path && !rel.startsWith(manifest.lib.path)) {
