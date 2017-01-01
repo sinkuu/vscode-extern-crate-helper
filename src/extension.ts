@@ -167,12 +167,12 @@ class ExternCrateHelper {
         let deps: string[] = [];
         if (manifest["dependencies"] !== null) {
             for (let k in manifest["dependencies"]) {
-                deps.push(k.replace('-', '_'));
+                deps.push(k.replace(/-/g, '_'));
             }
         }
         if (manifest["dev-dependencies"] !== null) {
             for (let k in manifest["dev-dependencies"]) {
-                deps.push(k.replace('-', '_'));
+                deps.push(k.replace(/-/g, '_'));
             }
         }
 
