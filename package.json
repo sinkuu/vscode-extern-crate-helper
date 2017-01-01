@@ -5,6 +5,10 @@
   "version": "0.0.1",
   "publisher": "sinkuu",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sinkuu/vscode-extern-crate-helper.git"
+  },
   "engines": {
     "vscode": "^1.5.0"
   },

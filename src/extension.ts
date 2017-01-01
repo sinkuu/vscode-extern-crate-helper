@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as toml from 'toml';
 import * as fs from 'fs';
+import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
     // console.log('"extern-crate-helper" is now active!');
@@ -81,7 +82,7 @@ class ExternCrateHelper {
             if (this.isCheckTarget(doc)) {
                 this.checkDocument(doc);
             } else {
-                if (doc.languageId === 'toml' && doc.fileName.endsWith('/Cargo.toml')) {
+                if (doc.languageId === 'toml' && path.basename(doc.fileName) === '/Cargo.toml') {
                     this.checkAll();
                 }
             }
@@ -136,13 +137,12 @@ class ExternCrateHelper {
             crates.push([match.index, match[1]]);
         }
 
-        let path = vscode.workspace.rootPath + '/Cargo.toml';
-        let mtime = fs.lstatSync(path).mtime;
-        // TODO findup
-        if (this._manifest === undefined || this._manifestpath !== path || this._manifestmtime < mtime) {
-            this._manifestpath = path;
+        let manifestPath = path.join(vscode.workspace.rootPath, 'Cargo.toml');
+        let mtime = fs.lstatSync(manifestPath).mtime;
+        if (this._manifest === undefined || this._manifestpath !== manifestPath || this._manifestmtime < mtime) {
+            this._manifestpath = manifestPath;
             this._manifestmtime = mtime;
-            this._manifest = toml.parse(fs.readFileSync(path, 'utf8'));
+            this._manifest = toml.parse(fs.readFileSync(manifestPath, 'utf8'));
         }
 
         let manifest = this._manifest;
