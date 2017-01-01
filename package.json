@@ -1,7 +1,7 @@
 {
   "name": "extern-crate-helper",
   "displayName": "extern crate helper",
-  "description": "Suggests you install missing dependencies to Cargo.toml",
+  "description": "Suggests you install missing `extern crate`ed dependencies to Cargo.toml",
   "version": "0.0.1",
   "publisher": "sinkuu",
   "license": "MIT",

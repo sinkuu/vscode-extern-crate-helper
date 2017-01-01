@@ -58,9 +58,13 @@ class ExternCrateHelper {
 
                 cp.execFile('cargo', args, { cwd: vscode.workspace.rootPath }, (err, stdout, stderr) => {
                     if (err && (err as any).code === 'ENOENT') {
-                        vscode.window.showErrorMessage('cargo-edit is not installed.');
+                        vscode.window.showErrorMessage('cargo is not installed.');
                     } else if (stderr.length !== 0) {
-                        vscode.window.showErrorMessage(stderr);
+                        if (stderr.startsWith('error: no such subcommand')) {
+                            vscode.window.showErrorMessage('cargo-edit is not installed');
+                        } else {
+                            vscode.window.showErrorMessage(stderr);
+                        }
                     } else {
                         this.checkDocument(editor.document);
                     }
