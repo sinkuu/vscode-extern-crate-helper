@@ -6,4 +6,4 @@ extern-crate-helper suggests you install missing `extern crate`ed dependencies.
 
 ## Requirements
 
-* Install `cargo-edit`.
+* Install `cargo-edit` (0.1.5 or newer is required).

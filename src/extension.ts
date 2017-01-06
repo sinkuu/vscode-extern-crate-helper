@@ -151,17 +151,11 @@ class ExternCrateHelper {
 
         let manifest = this._manifest;
 
-        let rel = doc.fileName.slice(vscode.workspace.rootPath.length);
-        if (manifest.lib && manifest.lib.path && !rel.startsWith(manifest.lib.path)) {
-            console.log('lib.path found but mismatched');
-            return false;
-        }
-        if (manifest.bin) {
-            let bins = manifest.bin as any[];
-            if (!bins.some((x) => x.path && rel.startsWith(x.path))) {
-                console.log('bin[].path found but none of them matched');
-                return false;
-            }
+        let lib_name = (manifest.lib && manifest.lib.name) || manifest.package && manifest.package.name;
+
+        // self reference
+        if (crates.some(([, crate]) => crate === lib_name.replace(/-/g, '_'))) {
+            return;
         }
 
         let deps: string[] = [];
