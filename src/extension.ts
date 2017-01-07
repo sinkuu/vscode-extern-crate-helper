@@ -5,6 +5,65 @@ import * as cp from 'child_process';
 import * as toml from 'toml';
 import * as fs from 'fs';
 import * as path from 'path';
+import findUp = require('find-up');
+
+const rustCrates = [
+    'alloc',
+    'alloc_jemalloc',
+    'alloc_system',
+    'arena',
+    'backtrace',
+    'collections',
+    'collectionstest',
+    'compiler_builtins',
+    'core',
+    'coretest',
+    'flate',
+    'fmt_macros',
+    'getopts',
+    'graphviz',
+    'libc',
+    'log',
+    'panic_abort',
+    'panic_unwind',
+    'proc_macro',
+    'proc_macro_plugin',
+    'proc_macro_tokens',
+    'rand',
+    'rustc',
+    'rustc_back',
+    'rustc_bitflags',
+    'rustc_borrowck',
+    'rustc_const_eval',
+    'rustc_const_math',
+    'rustc_data_structures',
+    'rustc_driver',
+    'rustc_errors',
+    'rustc_i128',
+    'rustc_incremental',
+    'rustc_lint',
+    'rustc_llvm',
+    'rustc_metadata',
+    'rustc_mir',
+    'rustc_passes',
+    'rustc_platform_intrinsics',
+    'rustc_plugin',
+    'rustc_privacy',
+    'rustc_resolve',
+    'rustc_save_analysis',
+    'rustc_trans',
+    'rustc_typeck',
+    'rustdoc',
+    'serialize',
+    'std',
+    'std_unicode',
+    'syntax',
+    'syntax_ext',
+    'syntax_pos',
+    'term',
+    'test',
+    'unwind',
+];
 
 export function activate(context: vscode.ExtensionContext) {
     // console.log('"extern-crate-helper" is now active!');
@@ -138,10 +197,15 @@ class ExternCrateHelper {
         let match: RegExpMatchArray;
         let crates: [number, string][] = [];
         while ((match = re.exec(masked)) !== null) {
-            crates.push([match.index, match[1]]);
+            if (!rustCrates.indexOf(match[1])) {
+                crates.push([match.index, match[1]]);
+            }
         }
 
-        let manifestPath = path.join(vscode.workspace.rootPath, 'Cargo.toml');
+        let manifestPath: string = findUp.sync('Cargo.toml', { 'cwd': path.dirname(doc.fileName) });
+        if (!manifestPath.startsWith(vscode.workspace.rootPath)) {
+            return;
+        }
         let mtime = fs.lstatSync(manifestPath).mtime;
         if (this._manifest === undefined || this._manifestpath !== manifestPath || this._manifestmtime < mtime) {
             this._manifestpath = manifestPath;
