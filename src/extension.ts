@@ -170,7 +170,6 @@ class ExternCrateHelper {
         }
 
         let diag = diags[0] as ExternCrateHelperDiagnostic;
-        console.log('code action ' + diag.crate);
         return Promise.resolve([new ExternCrateHelperCommand(diag.crate, false),
         new ExternCrateHelperCommand(diag.crate, true)]);
     }
@@ -197,7 +196,7 @@ class ExternCrateHelper {
         let match: RegExpMatchArray;
         let crates: [number, string][] = [];
         while ((match = re.exec(masked)) !== null) {
-            if (!rustCrates.indexOf(match[1])) {
+            if (rustCrates.indexOf(match[1]) === -1) {
                 crates.push([match.index, match[1]]);
             }
         }
@@ -215,12 +214,9 @@ class ExternCrateHelper {
 
         let manifest = this._manifest;
 
-        let lib_name = (manifest.lib && manifest.lib.name) || manifest.package && manifest.package.name;
-
         // self reference
-        if (crates.some(([, crate]) => crate === lib_name.replace(/-/g, '_'))) {
-            return;
-        }
+        let lib_name = ((manifest.lib && manifest.lib.name) || manifest.package && manifest.package.name).replace(/-/g, '_');
+        crates = crates.filter(([, crate]) => crate !== lib_name);
 
         let deps: string[] = [];
         if (manifest["dependencies"] !== null) {
@@ -244,7 +240,7 @@ class ExternCrateHelper {
                 diags.push(new ExternCrateHelperDiagnostic(
                     crate,
                     new vscode.Range(doc.positionAt(index),
-                        doc.positionAt(source.indexOf(';', index) + 1))
+                        doc.positionAt(masked.indexOf(';', index) + 1))
                 ));
             }
         }
